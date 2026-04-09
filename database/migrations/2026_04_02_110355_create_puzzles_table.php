@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('puzzles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('image')->nullable();
-            $table->string('fen');
+            $table->string('title');
+            $table->string('initial_fen');
+            $table->enum('difficulty', ['easy', 'medium', 'hard']);
+            $table->json('solution');
             $table->timestamps();
         });
     }
