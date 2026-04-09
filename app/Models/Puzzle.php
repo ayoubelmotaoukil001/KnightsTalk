@@ -6,15 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Puzzle extends Model
 {
-    protected $fillable = ['name', 'description', 'image', 'user_id', 'fen'];
+    protected $fillable = ['title', 'initial_fen', 'difficulty', 'solution', 'user_id'];
+
+    protected $casts = [
+        'solution' => 'array',
+    ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function solutions()
-    {
-        return $this->hasMany(Solution::class)->orderBy('order', 'asc');
-    }
+    
 }
