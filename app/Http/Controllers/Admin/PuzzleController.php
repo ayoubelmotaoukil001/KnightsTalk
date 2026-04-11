@@ -6,53 +6,46 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePuzzleRequest;
 use App\Models\Puzzle;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PuzzleController extends Controller
 {
-    /**
-     * Show all puzzles.
-     */
-    public function index(): View
+    public function __construct()
     {
-        $puzzles = Puzzle::query()->latest()->get();
+        $this->middleware(function (Request $request, $next) {
+            $ok = $request->user()
+                && ($request->user()->is_admin || app()->environment('local'));
 
-        return view('admin.puzzles.index', compact('puzzles'));
+            abort_unless($ok, 403);
+
+            return $next($request);
+        });
     }
 
-    /**
-     * Show create puzzle form.
-     */
+    public function index(): View
+    {
+        return view('admin.puzzles.index', [
+            'puzzles' => Puzzle::query()->latest()->get(),
+        ]);
+    }
+
     public function create(): View
     {
         return view('admin.puzzles.create');
     }
 
-    /**
-     * Save puzzle + its solution moves.
-     */
     public function store(StorePuzzleRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-        $validated['user_id'] = $request->user()->id;
+        Puzzle::create(array_merge($request->validated(), ['user_id' => auth()->id()]));
 
-        Puzzle::create($validated);
-
-        return redirect()
-            ->route('admin.puzzles.index')
-            ->with('success', 'Puzzle created successfully.');
+        return redirect()->route('admin.puzzles.index')->with('success', 'Saved.');
     }
 
-    /**
-     * Delete puzzle (solutions removed via FK cascade).
-     */
     public function destroy(Puzzle $puzzle): RedirectResponse
     {
         $puzzle->delete();
 
-        return redirect()
-            ->back()
-            ->with('success', 'Puzzle deleted successfully.');
+        return redirect()->back()->with('success', 'Deleted.');
     }
 }
-
