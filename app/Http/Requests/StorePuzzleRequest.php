@@ -8,7 +8,24 @@ class StorePuzzleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->is_admin;
+        return $this->user()
+            && ($this->user()->is_admin || app()->environment('local'));
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! is_array($this->solution)) {
+            return;
+        }
+
+        $clean = [];
+        foreach ($this->solution as $move) {
+            if (is_string($move) && trim($move) !== '') {
+                $clean[] = trim($move);
+            }
+        }
+
+        $this->merge(['solution' => $clean]);
     }
 
     public function rules(): array
@@ -16,7 +33,7 @@ class StorePuzzleRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'initial_fen' => 'required|string',
-            'solution' => 'required|array',
+            'solution' => 'required|array|min:1',
             'solution.*' => 'required|string',
             'difficulty' => 'required|in:easy,medium,hard',
         ];
