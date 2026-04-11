@@ -1,0 +1,31 @@
+/*! chessboard.js v1.0.0 | (c) 2019 Chris Oakman | MIT License chessboardjs.com/license */
+.clearfix-7da63{clear:both}.board-b72b1{border:2px solid #404040;box-sizing:content-box}.square-55d63{float:left;position:relative;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.white-1e1d7{background-color:#f0d9b5;color:#b58863}.black-3c85d{background-color:#b58863;color:#f0d9b5}.highlight1-32417,.highlight2-9c5d2{box-shadow:inset 0 0 3px 3px #ff0}.notation-322f9{cursor:default;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:14px;position:absolute}.alpha-d2270{bottom:1px;right:3px}.numeric-fc462{top:2px;left:2px}
+
+/* KnightsTalk: board on top, spare rows horizontal under the board */
+.chessboard-63f37 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+.chessboard-63f37 .board-b72b1 {
+  order: 1;
+  width: 100%;
+}
+.chessboard-63f37 .spare-pieces-top-4028b,
+.chessboard-63f37 .spare-pieces-bottom-ae20f {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 480px;
+}
+.chessboard-63f37 .spare-pieces-top-4028b { order: 2; }
+.chessboard-63f37 .spare-pieces-bottom-ae20f { order: 3; }
+.chessboard-63f37 .spare-pieces-7492f img {
+  display: block;
+}
