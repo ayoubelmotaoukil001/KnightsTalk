@@ -22,6 +22,8 @@
                     @if (is_array($puzzle->solution))
                         ({{ count($puzzle->solution) }} moves)
                     @endif
+                    <a href="{{ route('admin.puzzles.play', $puzzle) }}" style="margin-left: 1rem;">Play</a>
+                    <a href="{{ route('admin.puzzles.edit', $puzzle) }}" style="margin-left: 1rem;">Edit</a>
                     <form action="{{ route('admin.puzzles.destroy', $puzzle) }}" method="post" style="display: inline; margin-left: 1rem;">
                         @csrf
                         @method('delete')
