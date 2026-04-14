@@ -18,7 +18,7 @@
 
                     @forelse ($messages as $message)
                     @php $color = $colors[$message->user_id % count($colors)]; @endphp
-                    <div class="flex items-start gap-3">
+                    <div id="message-{{ $message->id }}" class="flex items-start gap-3">
 
                         @if ($message->user->profile_photo)
                             <img src="{{ Storage::url($message->user->profile_photo) }}" class="w-9 h-9 rounded-full object-cover flex-shrink-0">
@@ -39,11 +39,11 @@
                         </div>
 
                         @if (auth()->id() === $message->user_id)
-                        <form method="POST" action="{{ route('chat.destroy', $message) }}" class="ml-auto">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-xs text-red-400 hover:text-red-600">Delete</button>
-                        </form>
+                        <button
+                            class="ml-auto text-xs text-red-400 hover:text-red-600"
+                            onclick="deleteMessage({{ $message->id }}, '{{ route('chat.destroy', $message) }}')">
+                            Delete
+                        </button>
                         @endif
 
                     </div>
@@ -75,6 +75,14 @@
     </div>
 
     <script>
+        function deleteMessage(id, url) {
+            axios.delete(url)
+                .then(function () {
+                    var row = document.getElementById('message-' + id);
+                    if (row) row.remove();
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
 
             var colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];

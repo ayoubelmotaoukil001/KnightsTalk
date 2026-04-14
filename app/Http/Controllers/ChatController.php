@@ -35,9 +35,14 @@ class ChatController extends Controller
         return view('chat.show', compact('message'));
     }
 
-    public function destroy(Message $message)
+    public function destroy(Request $request, Message $message)
     {
         $message->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(['deleted' => true]);
+        }
+
         return redirect()->route('chat.index');
     }
 }
