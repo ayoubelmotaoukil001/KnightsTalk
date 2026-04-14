@@ -15,10 +15,7 @@ class PuzzleController extends Controller
     public function __construct()
     {
         $this->middleware(function (Request $request, $next) {
-            $ok = $request->user()
-                && ($request->user()->is_admin || app()->environment('local'));
-
-            abort_unless($ok, 403);
+            abort_unless($request->user() && $request->user()->is_admin, 403);
 
             return $next($request);
         });
