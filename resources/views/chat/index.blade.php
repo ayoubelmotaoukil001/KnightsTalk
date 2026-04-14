@@ -107,19 +107,23 @@
                 if (content === '') return;
 
                 axios.post('{{ route("chat.store") }}', { content: content })
-                    .then(function () {
+                    .then(function (response) {
                         var myId      = {{ auth()->id() }};
                         var myName    = '{{ auth()->user()->name }}';
                         var myPhoto   = '{{ auth()->user()->profile_photo ? Storage::url(auth()->user()->profile_photo) : '' }}';
                         var myColor   = colors[myId % colors.length];
+                        var msgId     = response.data.id;
+                        var deleteUrl = '{{ url("chat") }}/' + msgId;
 
                         var div = document.createElement('div');
+                        div.id = 'message-' + msgId;
                         div.className = 'flex items-start gap-3';
                         div.innerHTML = buildAvatar(myName, myId, myPhoto, myColor)
                                       + '<div>'
                                       + '<p class="text-sm font-semibold text-gray-800">' + myName + ' <span class="text-xs text-gray-400 font-normal">Just now</span></p>'
                                       + '<p class="text-gray-700 mt-0.5">' + content + '</p>'
-                                      + '</div>';
+                                      + '</div>'
+                                      + '<button class="ml-auto text-xs text-red-400 hover:text-red-600" onclick="deleteMessage(' + msgId + ', \'' + deleteUrl + '\')">Delete</button>';
 
                         messageBox.appendChild(div);
                         messageBox.scrollTop = messageBox.scrollHeight;
@@ -132,6 +136,7 @@
                     var color = colors[e.message.user_id % colors.length];
 
                     var div = document.createElement('div');
+                    div.id = 'message-' + e.message.id;
                     div.className = 'flex items-start gap-3';
                     div.innerHTML = buildAvatar(e.message.user.name, e.message.user_id, e.message.photo_url, color)
                                   + '<div>'
@@ -141,6 +146,10 @@
 
                     messageBox.appendChild(div);
                     messageBox.scrollTop = messageBox.scrollHeight;
+                })
+                .listen('MessageDeleted', function (e) {
+                    var row = document.getElementById('message-' + e.message_id);
+                    if (row) row.remove();
                 });
 
         });
