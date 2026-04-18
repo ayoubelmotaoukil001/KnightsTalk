@@ -16,6 +16,4 @@ class Puzzle extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    
 }
