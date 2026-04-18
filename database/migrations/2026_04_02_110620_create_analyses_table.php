@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('analyses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('title');
-            $table->text('analysis');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('title')->nullable();
+            $table->text('analysis')->nullable();
             $table->string('media_url')->nullable();
+            $table->json('moves_data')->nullable();
             $table->timestamps();
         });
     }
