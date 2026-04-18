@@ -1,36 +1,39 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Puzzles</h2>
+        <h2 class="font-bold text-xl text-white leading-tight">Puzzles</h2>
     </x-slot>
 
     <div class="py-8 px-4 max-w-3xl mx-auto">
-        @if (session('success'))
-            <p style="color: green; margin-bottom: 1rem;">{{ session('success') }}</p>
-        @endif
 
-        <p style="margin-bottom: 1rem;">
-            <a href="{{ route('admin.puzzles.create') }}" style="text-decoration: underline;">Add a puzzle</a>
-        </p>
+        <a href="{{ route('admin.puzzles.create') }}"
+           class="inline-block mb-6 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white rounded-xl hover:from-emerald-400 hover:to-emerald-600 text-sm font-medium transition-all duration-200 shadow-lg shadow-emerald-500/20">
+            + Add a Puzzle
+        </a>
 
         @if ($puzzles->isEmpty())
-            <p>No puzzles yet.</p>
+            <p class="text-gray-500">No puzzles yet.</p>
         @else
-            @foreach ($puzzles as $puzzle)
-                <div style="border: 1px solid #ccc; padding: 1rem; margin-bottom: 0.5rem;">
-                    <strong>{{ $puzzle->title }}</strong>
-                    — {{ $puzzle->difficulty }}
-                    @if (is_array($puzzle->solution))
-                        ({{ count($puzzle->solution) }} moves)
-                    @endif
-                    <a href="{{ route('admin.puzzles.play', $puzzle) }}" style="margin-left: 1rem;">Play</a>
-                    <a href="{{ route('admin.puzzles.edit', $puzzle) }}" style="margin-left: 1rem;">Edit</a>
-                    <form action="{{ route('admin.puzzles.destroy', $puzzle) }}" method="post" style="display: inline; margin-left: 1rem;">
-                        @csrf
-                        @method('delete')
-                        <button type="submit">Delete</button>
-                    </form>
-                </div>
-            @endforeach
+            <div class="space-y-3">
+                @foreach ($puzzles as $puzzle)
+                    <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                        <div>
+                            <span class="font-medium text-white">{{ $puzzle->title }}</span>
+                            <span class="text-gray-500 ml-1">&mdash; {{ $puzzle->difficulty }}</span>
+                            @if (is_array($puzzle->solution))
+                                <span class="text-gray-500 text-sm ml-1">({{ count($puzzle->solution) }} moves)</span>
+                            @endif
+                        </div>
+                        <div class="flex gap-3 items-center">
+                            <a href="{{ route('admin.puzzles.play', $puzzle) }}" class="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">Play</a>
+                            <a href="{{ route('admin.puzzles.edit', $puzzle) }}" class="text-sm text-gray-400 hover:text-white transition-colors">Edit</a>
+                            <form action="{{ route('admin.puzzles.destroy', $puzzle) }}" method="post">
+                                @csrf @method('delete')
+                                <button type="submit" class="text-sm text-red-400 hover:text-red-300 transition-colors">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         @endif
     </div>
 </x-app-layout>
