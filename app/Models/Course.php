@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
-    protected $fillable = ['name', 'description', 'image', 'user_id'];
+    protected $fillable = ['title', 'description', 'level'];
 
-    public function user()
+    public function lessons()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(Lesson::class)->orderBy('order');
     }
 }
