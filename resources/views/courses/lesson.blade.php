@@ -4,52 +4,54 @@
 
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-bold text-xl text-white leading-tight">{{ $lesson->title }}</h2>
-            <a href="{{ route('courses.show', $course) }}" class="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">&larr; {{ $course->title }}</a>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-xl font-bold leading-tight text-slate-900 dark:text-white">{{ $lesson->title }}</h2>
+            <a href="{{ route('courses.show', $course) }}" class="text-sm font-medium text-red-600 transition-colors hover:text-red-500 dark:text-red-400 dark:hover:text-red-300">
+                &larr; {{ $course->title }}
+            </a>
         </div>
     </x-slot>
 
-    <div class="flex flex-col items-center pt-6 pb-10 px-3">
+    <div class="flex flex-col items-center px-3 pb-10 pt-6">
 
-        <div id="review-box" class="mb-4 w-full bg-blue-500/10 border border-blue-500/20 rounded-2xl overflow-hidden backdrop-blur-md" style="max-width:500px">
-            <div class="px-4 py-2 bg-blue-500/10 border-b border-blue-500/20">
-                <span id="review-move" class="font-bold text-blue-400 text-sm">Click Next to begin</span>
+        <div id="review-box" class="mb-4 w-full max-w-[500px] overflow-hidden rounded-2xl border border-blue-200/90 bg-blue-50/80 shadow-sm backdrop-blur-md dark:border-blue-500/20 dark:bg-blue-500/10 dark:shadow-none">
+            <div class="border-b border-blue-200/80 bg-blue-100/50 px-4 py-2 dark:border-blue-500/20 dark:bg-blue-500/10">
+                <span id="review-move" class="text-sm font-bold text-blue-800 dark:text-blue-400">Click Next to begin</span>
             </div>
-            <div class="px-4 py-3 min-h-[56px]">
-                <p id="review-text" class="text-sm text-gray-300">This lesson has {{ count($lesson->move_descriptions ?? []) }} moves.</p>
+            <div class="min-h-[56px] px-4 py-3">
+                <p id="review-text" class="text-sm text-slate-700 dark:text-gray-300">This lesson has {{ count($lesson->move_descriptions ?? []) }} moves.</p>
             </div>
         </div>
 
-        <div id="board" style="width:500px" class="rounded-xl overflow-hidden shadow-2xl shadow-black/50 ring-1 ring-white/10"></div>
+        <div id="board" style="width:500px;max-width:100%" class="overflow-hidden rounded-xl shadow-lg ring-1 ring-slate-200 dark:shadow-2xl dark:shadow-black/50 dark:ring-white/10"></div>
 
-        <p id="move-counter" class="mt-2 text-xs text-gray-500">Move 0 / {{ count($lesson->move_descriptions ?? []) }}</p>
+        <p id="move-counter" class="mt-2 text-xs text-slate-600 dark:text-gray-500">Move 0 / {{ count($lesson->move_descriptions ?? []) }}</p>
 
-        <div class="flex gap-4 mt-4 w-full" style="max-width:500px">
-            <button id="btn-prev" class="flex-1 py-3 bg-white/5 border border-white/10 text-gray-300 text-base font-semibold rounded-xl hover:bg-white/10 transition-all duration-200">&larr; Previous</button>
-            <button id="btn-next" class="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white text-base font-semibold rounded-xl hover:from-emerald-400 hover:to-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/20">Next &rarr;</button>
+        <div class="mt-4 flex w-full max-w-[500px] gap-4">
+            <button type="button" id="btn-prev" class="flex-1 rounded-xl border border-slate-200/90 bg-white py-3 text-base font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10">&larr; Previous</button>
+            <button type="button" id="btn-next" class="flex-1 rounded-xl border border-red-500/50 bg-gradient-to-b from-red-500 to-red-600 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:from-red-400 hover:to-red-500 dark:shadow-lg dark:shadow-red-500/20">Next &rarr;</button>
         </div>
 
-        <div id="complete-msg" class="hidden mt-5 w-full p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center" style="max-width:500px">
-            <p class="text-emerald-400 font-semibold text-lg">Lesson Complete!</p>
+        <div id="complete-msg" class="mt-5 hidden w-full max-w-[500px] rounded-2xl border border-emerald-200/90 bg-emerald-50 p-4 text-center dark:border-emerald-500/20 dark:bg-emerald-500/10">
+            <p class="text-lg font-semibold text-emerald-800 dark:text-emerald-400">Lesson Complete!</p>
         </div>
 
-        <div class="mt-4 w-full" style="max-width:500px">
+        <div class="mt-4 w-full max-w-[500px]">
             @if($isCompleted)
-                <button id="btn-complete" disabled class="w-full py-3 bg-emerald-500/20 text-emerald-400 text-base font-semibold rounded-xl opacity-80 cursor-default border border-emerald-500/20">Already Completed</button>
+                <button type="button" id="btn-complete" disabled class="w-full cursor-default rounded-xl border border-emerald-200/90 bg-emerald-50 py-3 text-base font-semibold text-emerald-800 opacity-90 dark:border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400">Already Completed</button>
             @else
-                <button id="btn-complete" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white text-base font-semibold rounded-xl hover:from-emerald-400 hover:to-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/20">Mark Lesson as Completed</button>
+                <button type="button" id="btn-complete" class="w-full rounded-xl border border-red-500/50 bg-gradient-to-b from-red-500 to-red-600 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:from-red-400 hover:to-red-500 dark:shadow-lg dark:shadow-red-500/20">Mark Lesson as Completed</button>
             @endif
         </div>
 
         @if($nextLesson)
             <a href="{{ route('courses.lesson', [$course, $nextLesson]) }}" id="btn-next-lesson"
-               class="{{ $isCompleted ? '' : 'hidden' }} mt-3 w-full text-center py-3 bg-blue-600 text-white rounded-xl text-base font-semibold hover:bg-blue-500 transition-all duration-200" style="max-width:500px">
+               class="{{ $isCompleted ? '' : 'hidden' }} mt-3 w-full max-w-[500px] rounded-xl bg-blue-600 py-3 text-center text-base font-semibold text-white transition-all duration-200 hover:bg-blue-500">
                 Next Lesson &rarr;
             </a>
         @else
             <a href="{{ route('courses.show', $course) }}" id="btn-next-lesson"
-               class="{{ $isCompleted ? '' : 'hidden' }} mt-3 w-full text-center py-3 bg-blue-600 text-white rounded-xl text-base font-semibold hover:bg-blue-500 transition-all duration-200" style="max-width:500px">
+               class="{{ $isCompleted ? '' : 'hidden' }} mt-3 w-full max-w-[500px] rounded-xl bg-blue-600 py-3 text-center text-base font-semibold text-white transition-all duration-200 hover:bg-blue-500">
                 Back to Course
             </a>
         @endif
@@ -129,7 +131,7 @@
                     body: '{}'
                 }).then(function (r) { return r.json(); }).then(function () {
                     btnComplete.textContent = 'Completed!';
-                    btnComplete.className = 'w-full py-3 bg-emerald-500/20 text-emerald-400 text-base font-semibold rounded-xl opacity-80 cursor-default border border-emerald-500/20';
+                    btnComplete.className = 'w-full cursor-default rounded-xl border border-emerald-200/90 bg-emerald-50 py-3 text-base font-semibold text-emerald-800 opacity-90 dark:border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400';
                     if (nextBtn) nextBtn.classList.remove('hidden');
                 });
             };

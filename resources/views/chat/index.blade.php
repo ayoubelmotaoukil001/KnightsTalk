@@ -1,54 +1,64 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-xl text-white leading-tight">
-            Chat
-        </h2>
+        <h2 class="text-xl font-bold leading-tight text-slate-900 dark:text-white">Chat</h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl sm:px-6 lg:px-8">
 
-            <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
+            <div class="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
 
                 @php
-                    $colors = ['bg-red-500', 'bg-blue-500', 'bg-emerald-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
+                    $colors = ['bg-red-500', 'bg-blue-500', 'bg-amber-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
                 @endphp
 
-                <div id="messages" class="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                <div id="messages" class="mb-6 max-h-96 space-y-3 overflow-y-auto">
 
                     @forelse ($messages as $message)
-                    @php $color = $colors[$message->user_id % count($colors)]; @endphp
-                    <div id="message-{{ $message->id }}" class="flex items-start gap-3">
+                    @php
+                        $color = $colors[$message->user_id % count($colors)];
+                        $mine = auth()->id() === $message->user_id;
+                    @endphp
+                    <div id="message-{{ $message->id }}" class="flex w-full {{ $mine ? 'justify-end' : 'justify-start' }}">
 
-                        @if ($message->user->profile_photo)
-                            <img src="{{ Storage::url($message->user->profile_photo) }}" class="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-1 ring-white/10">
-                        @else
-                            <div class="w-9 h-9 rounded-full {{ $color }} flex items-center justify-center text-white font-bold flex-shrink-0">
-                                {{ strtoupper(substr($message->user->name, 0, 1)) }}
+                        <div class="flex max-w-[min(85%,28rem)] items-end gap-2 {{ $mine ? 'flex-row-reverse' : 'flex-row' }}">
+
+                            @if ($message->user->profile_photo)
+                                <img src="{{ Storage::url($message->user->profile_photo) }}" class="h-9 w-9 flex-shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-white/10">
+                            @else
+                                <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full {{ $color }} text-sm font-bold text-white">
+                                    {{ strtoupper(substr($message->user->name, 0, 1)) }}
+                                </div>
+                            @endif
+
+                            <div class="{{ $mine ? 'text-right' : 'text-left' }} min-w-0">
+                                <p class="text-xs font-medium text-slate-500 dark:text-gray-500">
+                                    @if ($mine)
+                                        You
+                                    @else
+                                        {{ $message->user->name }}
+                                    @endif
+                                </p>
+                                <div class="mt-0.5 inline-block rounded-2xl px-3.5 py-2 text-sm text-left
+                                    {{ $mine
+                                        ? 'rounded-tr-sm bg-red-600 text-white dark:bg-red-600'
+                                        : 'rounded-tl-sm bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-200' }}">
+                                    {{ $message->content }}
+                                </div>
+                                @if ($mine)
+                                    <div class="mt-1">
+                                        <button type="button"
+                                            class="text-xs text-red-600 transition-colors hover:text-red-500 dark:text-red-400 dark:hover:text-red-300"
+                                            onclick="deleteMessage({{ $message->id }}, '{{ route('chat.destroy', $message) }}')">
+                                            Delete
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
-
-                        <div>
-                            <p class="text-sm font-semibold text-white">
-                                {{ $message->user->name }}
-                                <span class="text-xs text-gray-500 font-normal ml-1">
-                                    {{ $message->created_at->diffForHumans() }}
-                                </span>
-                            </p>
-                            <p class="text-gray-300 mt-0.5">{{ $message->content }}</p>
                         </div>
-
-                        @if (auth()->id() === $message->user_id)
-                        <button
-                            class="ml-auto text-xs text-red-400 hover:text-red-300 transition-colors"
-                            onclick="deleteMessage({{ $message->id }}, '{{ route('chat.destroy', $message) }}')">
-                            Delete
-                        </button>
-                        @endif
-
                     </div>
                     @empty
-                    <p class="text-gray-500 text-center">No messages yet. Say something!</p>
+                    <p class="text-center text-slate-500 dark:text-gray-500">No messages yet. Say something!</p>
                     @endforelse
 
                 </div>
@@ -60,14 +70,14 @@
                         name="content"
                         placeholder="Type a message..."
                         autocomplete="off"
-                        class="flex-1 bg-white/5 border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 placeholder-gray-500 transition-all duration-200" />
-                    <button id="chat_send" type="submit" class="bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white text-sm px-5 py-2.5 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-emerald-500/20">
+                        class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-all duration-200 focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-500/30 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-500 dark:focus:border-red-500 dark:focus:ring-red-500/40" />
+                    <button id="chat_send" type="submit" class="rounded-xl border border-red-500/50 bg-transparent px-5 py-2.5 text-sm font-medium text-red-600 transition-all duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white hover:shadow-md dark:text-red-400 dark:hover:shadow-[0_0_16px_rgba(239,68,68,0.25)]">
                         Send
                     </button>
                 </form>
 
                 @error('content')
-                <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
 
             </div>
@@ -85,19 +95,47 @@
 
         document.addEventListener('DOMContentLoaded', function () {
 
-            var colors = ['bg-red-500', 'bg-blue-500', 'bg-emerald-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
+            var colors = ['bg-red-500', 'bg-blue-500', 'bg-amber-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
 
             var form       = document.getElementById('chat_form');
             var input      = document.getElementById('chat_input');
             var messageBox = document.getElementById('messages');
+            var myUserId   = {{ auth()->id() }};
 
             messageBox.scrollTop = messageBox.scrollHeight;
 
             function buildAvatar(name, userId, photoUrl, color) {
                 if (photoUrl) {
-                    return '<img src="' + photoUrl + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-1 ring-white/10">';
+                    return '<img src="' + photoUrl + '" class="h-9 w-9 flex-shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-white/10">';
                 }
-                return '<div class="w-9 h-9 rounded-full ' + color + ' flex items-center justify-center text-white font-bold flex-shrink-0">' + name.charAt(0).toUpperCase() + '</div>';
+                return '<div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ' + color + ' text-sm font-bold text-white">' + name.charAt(0).toUpperCase() + '</div>';
+            }
+
+            function appendMessageRow(id, userId, userName, photoUrl, content, showDelete, deleteUrl) {
+                var mine = userId === myUserId;
+                var color = colors[userId % colors.length];
+                var div = document.createElement('div');
+                div.id = 'message-' + id;
+                div.className = 'flex w-full ' + (mine ? 'justify-end' : 'justify-start');
+
+                var inner = '<div class="flex max-w-[min(85%,28rem)] items-end gap-2 ' + (mine ? 'flex-row-reverse' : 'flex-row') + '">';
+                inner += buildAvatar(userName, userId, photoUrl, color);
+                inner += '<div class="' + (mine ? 'text-right' : 'text-left') + ' min-w-0">';
+                inner += '<p class="text-xs font-medium text-slate-500 dark:text-gray-500">' + (mine ? 'You' : escapeHtml(userName)) + '</p>';
+                inner += '<div class="mt-0.5 inline-block rounded-2xl px-3.5 py-2 text-left text-sm ' + (mine ? 'rounded-tr-sm bg-red-600 text-white dark:bg-red-600' : 'rounded-tl-sm bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-200') + '">' + escapeHtml(content) + '</div>';
+                if (mine && showDelete) {
+                    inner += '<div class="mt-1"><button type="button" class="text-xs text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300" onclick="deleteMessage(' + id + ', \'' + deleteUrl + '\')">Delete</button></div>';
+                }
+                inner += '</div></div>';
+
+                div.innerHTML = inner;
+                messageBox.appendChild(div);
+                messageBox.scrollTop = messageBox.scrollHeight;
+            }
+
+            function escapeHtml(s) {
+                if (!s) return '';
+                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             }
 
             var sendBtn = document.getElementById('chat_send');
@@ -128,25 +166,14 @@
 
                 axios.post('{{ route("chat.store") }}', { content: content })
                     .then(function (response) {
-                        var myId      = {{ auth()->id() }};
                         var myName    = '{{ auth()->user()->name }}';
                         var myPhoto   = '{{ auth()->user()->profile_photo ? Storage::url(auth()->user()->profile_photo) : '' }}';
-                        var myColor   = colors[myId % colors.length];
                         var msgId     = response.data.id;
                         var deleteUrl = '{{ url("chat") }}/' + msgId;
 
-                        var div = document.createElement('div');
-                        div.id = 'message-' + msgId;
-                        div.className = 'flex items-start gap-3';
-                        div.innerHTML = buildAvatar(myName, myId, myPhoto, myColor)
-                                      + '<div>'
-                                      + '<p class="text-sm font-semibold text-white">' + myName + ' <span class="text-xs text-gray-500 font-normal">Just now</span></p>'
-                                      + '<p class="text-gray-300 mt-0.5">' + content + '</p>'
-                                      + '</div>'
-                                      + '<button class="ml-auto text-xs text-red-400 hover:text-red-300" onclick="deleteMessage(' + msgId + ', \'' + deleteUrl + '\')">Delete</button>';
+                        if (document.getElementById('message-' + msgId)) return;
 
-                        messageBox.appendChild(div);
-                        messageBox.scrollTop = messageBox.scrollHeight;
+                        appendMessageRow(msgId, myUserId, myName, myPhoto, content, true, deleteUrl);
                     })
                     .finally(function () {
                         unlockForm();
@@ -155,19 +182,20 @@
 
             window.Echo.channel('knighttsTalk')
                 .listen('MessageSent', function (e) {
-                    var color = colors[e.message.user_id % colors.length];
+                    if (document.getElementById('message-' + e.message.id)) return;
 
-                    var div = document.createElement('div');
-                    div.id = 'message-' + e.message.id;
-                    div.className = 'flex items-start gap-3';
-                    div.innerHTML = buildAvatar(e.message.user.name, e.message.user_id, e.message.photo_url, color)
-                                  + '<div>'
-                                  + '<p class="text-sm font-semibold text-white">' + e.message.user.name + ' <span class="text-xs text-gray-500 font-normal">Just now</span></p>'
-                                  + '<p class="text-gray-300 mt-0.5">' + e.message.content + '</p>'
-                                  + '</div>';
-
-                    messageBox.appendChild(div);
-                    messageBox.scrollTop = messageBox.scrollHeight;
+                    var uid = e.message.user_id;
+                    var mine = uid === myUserId;
+                    var delUrl = mine ? ('{{ url("chat") }}/' + e.message.id) : '';
+                    appendMessageRow(
+                        e.message.id,
+                        uid,
+                        e.message.user.name,
+                        e.message.photo_url || '',
+                        e.message.content,
+                        mine,
+                        delUrl
+                    );
                 })
                 .listen('MessageDeleted', function (e) {
                     var row = document.getElementById('message-' + e.message_id);

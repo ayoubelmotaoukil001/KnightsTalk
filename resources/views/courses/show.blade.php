@@ -1,60 +1,69 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-xl text-white leading-tight">{{ $course->title }}</h2>
+        <h2 class="font-semibold text-sm text-slate-600 leading-tight tracking-widest uppercase dark:text-slate-500">{{ $course->title }}</h2>
     </x-slot>
 
     <div class="py-8 px-4 max-w-4xl mx-auto">
 
-        <a href="{{ route('courses.index') }}" class="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block transition-colors">&larr; All Courses</a>
+        <a href="{{ route('courses.index') }}" class="mb-6 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-500 transition-colors duration-200 hover:text-red-600 dark:text-slate-600 dark:hover:text-red-400">
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            All Courses
+        </a>
 
-        <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 mb-6">
-            <div class="flex items-center gap-3 mb-2">
-                <h3 class="text-xl font-bold text-white">{{ $course->title }}</h3>
-                <span class="text-xs px-2 py-0.5 rounded-full
-                    {{ $course->level === 'beginner' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : '' }}
-                    {{ $course->level === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : '' }}
-                    {{ $course->level === 'pro' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : '' }}">
+        <div class="mb-6 rounded-3xl border border-slate-200/90 bg-white p-7 shadow-sm dark:bg-white/[0.03] dark:border-white/[0.07] dark:shadow-none">
+            <div class="mb-3 flex items-start gap-3">
+                <h1 class="flex-1 text-2xl font-bold text-slate-900 dark:text-white">{{ $course->title }}</h1>
+                <span class="flex-shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest
+                    {{ $course->level === 'beginner' ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400' : '' }}
+                    {{ $course->level === 'intermediate' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400' : '' }}
+                    {{ $course->level === 'pro' ? 'border-slate-200 bg-slate-100 text-slate-700 dark:border-white/[0.12] dark:bg-white/[0.07] dark:text-slate-300' : '' }}">
                     {{ ucfirst($course->level) }}
                 </span>
             </div>
 
             @if($course->description)
-                <p class="text-gray-400 mb-4">{{ $course->description }}</p>
+                <p class="mb-5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ $course->description }}</p>
             @endif
 
-            <div class="flex justify-between text-sm text-gray-400 mb-1">
+            <div class="mb-1.5 flex justify-between text-[11px] text-slate-500 dark:text-slate-600">
                 <span>Your Progress</span>
-                <span class="font-semibold {{ $progress_percentage === 100 ? 'text-emerald-400' : 'text-blue-400' }}">{{ $completed }} / {{ $total }} &mdash; {{ $progress_percentage }}%</span>
+                <span class="font-bold {{ $progress_percentage === 100 ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400' }}">{{ $completed }} / {{ $total }} — {{ $progress_percentage }}%</span>
             </div>
-            <div class="w-full bg-white/5 rounded-full h-3">
-                <div class="h-3 rounded-full transition-all duration-500 {{ $progress_percentage === 100 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-blue-500' }}"
+            <div class="h-[2px] w-full rounded-full bg-slate-200 dark:bg-white/[0.04]">
+                <div class="h-[2px] rounded-full transition-all duration-500 {{ $progress_percentage === 100 ? 'bg-amber-500 progress-glow dark:bg-amber-400' : 'bg-blue-500 progress-glow-blue dark:bg-blue-400' }}"
                      style="width: {{ $progress_percentage }}%"></div>
             </div>
         </div>
 
-        <h4 class="text-lg font-semibold text-white mb-4">Lessons</h4>
+        <p class="mb-3 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-600">Lessons</p>
 
         @forelse($course->lessons as $index => $lesson)
             @php $done = in_array($lesson->id, $completedIds); @endphp
             <a href="{{ route('courses.lesson', [$course, $lesson]) }}"
-               class="block bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 mb-3 hover:bg-white/10 hover:border-white/20 transition-all duration-200">
-                <div class="flex items-center gap-3">
-                    @if($done)
-                        <span class="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg shadow-emerald-500/30">&#x2713;</span>
-                    @else
-                        <span class="w-8 h-8 bg-white/10 text-gray-400 rounded-full flex items-center justify-center text-sm font-bold">{{ $index + 1 }}</span>
-                    @endif
-                    <div class="flex-1">
-                        <p class="font-medium text-white">{{ $lesson->title }}</p>
-                        <p class="text-xs text-gray-500">{{ count($lesson->move_descriptions ?? []) }} moves</p>
-                    </div>
-                    <span class="text-xs {{ $done ? 'text-emerald-400' : 'text-gray-500' }}">
-                        {{ $done ? 'Completed' : 'Start' }}
-                    </span>
+               class="group mb-2 flex items-center gap-4 rounded-2xl border px-5 py-4 transition-all duration-300
+                   {{ $done
+                       ? 'border-amber-200/80 bg-amber-50/30 hover:border-amber-300 dark:border-amber-500/15 dark:bg-transparent dark:hover:border-amber-500/30 dark:hover:bg-amber-500/[0.03]'
+                       : 'border-slate-200/90 bg-white shadow-sm hover:border-red-300 hover:bg-slate-50 dark:border-white/[0.07] dark:bg-white/[0.03] dark:shadow-none dark:hover:border-red-500/20 dark:hover:bg-white/[0.05]' }}">
+
+                @if($done)
+                    <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-amber-300 bg-amber-100 text-sm font-bold text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/15 dark:text-amber-400"
+                          style="box-shadow: 0 0 12px rgba(245,158,11,0.2);">✓</span>
+                @else
+                    <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-transparent bg-slate-100 text-xs font-bold text-slate-600 transition-all duration-300 group-hover:border-red-200 group-hover:bg-red-50 group-hover:text-red-600 dark:bg-white/[0.04] dark:text-slate-600 dark:group-hover:border-red-500/20 dark:group-hover:bg-red-500/10 dark:group-hover:text-red-400">{{ $index + 1 }}</span>
+                @endif
+
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-medium text-slate-800 transition-colors duration-200 group-hover:text-slate-950 dark:text-slate-200 dark:group-hover:text-white">{{ $lesson->title }}</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-600">{{ count($lesson->move_descriptions ?? []) }} moves</p>
                 </div>
+
+                <span class="flex-shrink-0 text-[11px] font-semibold transition-colors duration-200 {{ $done ? 'text-amber-700 dark:text-amber-500/60' : 'text-slate-500 group-hover:text-slate-700 dark:text-slate-600 dark:group-hover:text-slate-400' }}">
+                    {{ $done ? 'Done' : 'Start →' }}
+                </span>
             </a>
         @empty
-            <p class="text-gray-500">No lessons in this course yet.</p>
+            <p class="py-10 text-center text-sm text-slate-500 dark:text-slate-600">No lessons in this course yet.</p>
         @endforelse
+
     </div>
 </x-app-layout>
