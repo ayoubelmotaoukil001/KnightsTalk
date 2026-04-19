@@ -44,7 +44,7 @@
 
         <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2">
 
-            {{-- LEFT: Immersive chess art panel (always dark) --}}
+            {{-- LEFT: Brand panel (always dark) --}}
             <div class="hidden lg:flex flex-col justify-between relative overflow-hidden bg-[#030303] chess-grid p-12">
 
                 <div class="absolute inset-0 bg-gradient-to-br from-red-900/20 via-transparent to-transparent pointer-events-none"></div>
@@ -60,13 +60,11 @@
                     <span class="text-xl font-bold text-white tracking-tight" style="font-family:'Playfair Display',serif;">KnightsTalk</span>
                 </div>
 
-                <div class="relative z-10 flex flex-col items-center justify-center flex-1 py-16">
-                    <div class="text-[18rem] leading-none select-none text-white/[0.04] filter drop-shadow-2xl">♛</div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-72 h-72 rounded-full bg-red-500/[0.04] border border-red-500/10 flex items-center justify-center">
-                            <div class="w-48 h-48 rounded-full bg-red-500/[0.06] border border-red-500/15"></div>
-                        </div>
-                    </div>
+                <div class="relative z-10 flex flex-col items-center justify-center flex-1 py-16 px-8">
+                    <div class="h-px w-20 bg-gradient-to-r from-transparent via-white/20 to-transparent" aria-hidden="true"></div>
+                    <p class="mt-10 text-center text-sm text-white/35 leading-relaxed max-w-xs">
+                        Structured lessons, puzzles, and practice in one place.
+                    </p>
                 </div>
 
                 <div class="relative z-10">
