@@ -7,20 +7,11 @@ use App\Http\Requests\StorePuzzleRequest;
 use App\Http\Requests\UpdatePuzzleRequest;
 use App\Models\Puzzle;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class PuzzleController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function (Request $request, $next) {
-            abort_unless($request->user() && $request->user()->is_admin, 403);
-
-            return $next($request);
-        });
-    }
-
     public function index(): View
     {
         return view('admin.puzzles.index', [
@@ -35,7 +26,7 @@ class PuzzleController extends Controller
 
     public function store(StorePuzzleRequest $request): RedirectResponse
     {
-        Puzzle::create(array_merge($request->validated(), ['user_id' => auth()->id()]));
+        Puzzle::create(array_merge($request->validated(), ['user_id' => Auth::id()]));
 
         return redirect()->route('admin.puzzles.index')->with('success', 'Saved.');
     }

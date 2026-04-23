@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ProGameController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('admin')->only(['create', 'store', 'edit', 'update', 'destroy']);
+    }
+
     public function index()
     {
         $games = ProGame::latest()->get();
@@ -20,14 +25,11 @@ class ProGameController extends Controller
 
     public function create()
     {
-        abort_unless(auth()->user()->is_admin, 403);
         return view('pro-games.create');
     }
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->is_admin, 403);
-
         $request->validate([
             'title' => 'nullable|string|max:255',
             'moves_data' => 'required|string',
@@ -45,14 +47,11 @@ class ProGameController extends Controller
 
     public function edit(ProGame $proGame)
     {
-        abort_unless(auth()->user()->is_admin, 403);
         return view('pro-games.edit', compact('proGame'));
     }
 
     public function update(Request $request, ProGame $proGame)
     {
-        abort_unless(auth()->user()->is_admin, 403);
-
         $request->validate([
             'title' => 'nullable|string|max:255',
             'moves_data' => 'required|string',
@@ -70,7 +69,6 @@ class ProGameController extends Controller
 
     public function destroy(ProGame $proGame)
     {
-        abort_unless(auth()->user()->is_admin, 403);
         $proGame->delete();
         return redirect()->route('pro-games.index')->with('success', 'Pro Game deleted.');
     }
