@@ -15,6 +15,13 @@
         html:not(.dark) #board-wrap.opponent-turn {
             box-shadow: 0 0 0 1px rgba(15,23,42,0.08), 0 4px 24px rgba(15,23,42,0.08);
         }
+        #board-wrap.board-error-flash {
+            animation: board-error-pulse 0.55s ease;
+        }
+        @keyframes board-error-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+            35% { box-shadow: 0 0 0 3px rgba(239,68,68,0.55), 0 0 36px rgba(239,68,68,0.35); }
+        }
     </style>
 @endpush
 
@@ -92,21 +99,12 @@
                 {{-- Feedback --}}
                 <div id="feedback" class="hidden rounded-2xl px-5 py-3.5 text-sm font-medium border transition-all duration-300"></div>
 
-                {{-- Move input --}}
+                {{-- Drag instructions --}}
                 <div class="rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.03] dark:shadow-none">
-                    <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-600">Your Move</p>
-                    <p class="mb-3 text-xs text-slate-500 dark:text-slate-500">Type only your moves. Wrong move — try again.</p>
-
-                    <div class="flex items-center gap-2">
-                        <input type="text" id="move_input" autocomplete="off"
-                               class="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 font-mono text-sm text-slate-900 placeholder-slate-400 transition-all duration-300 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/15 dark:border-white/[0.10] dark:bg-transparent dark:text-slate-100 dark:placeholder-slate-700 dark:focus:border-red-500/50 dark:focus:ring-red-500/10 dark:focus:shadow-[0_0_0_4px_rgba(239,68,68,0.08)]"
-                               placeholder="e.g. Nf3" {{ $alreadySolved ? 'disabled' : '' }}>
-                        <button type="button" id="btn-submit"
-                                class="px-4 py-2 bg-transparent border border-red-500/40 text-red-400 rounded-xl text-sm font-semibold hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-[0_0_16px_rgba(239,68,68,0.3)] transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                                {{ $alreadySolved ? 'disabled' : '' }}>
-                            Submit
-                        </button>
-                    </div>
+                    <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-600">How to solve</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Drag your pieces to the correct square. Each move must match the puzzle line. Wrong moves snap back; when you are right, the opponent reply plays automatically after a short pause.
+                    </p>
                 </div>
 
                 {{-- Moves log --}}
@@ -133,6 +131,21 @@
         var solved      = @json($alreadySolved);
 
         var boardWrap = document.getElementById('board-wrap');
+        var opponentTimer = null;
+        var waitingReply = false;
+        var animatingSolution = false;
+
+        function clearOpponentTimer() {
+            if (opponentTimer) {
+                clearTimeout(opponentTimer);
+                opponentTimer = null;
+            }
+        }
+
+        function cancelOpponentWait() {
+            clearOpponentTimer();
+            waitingReply = false;
+        }
 
         function setTurn(isPlayer) {
             boardWrap.classList.remove('player-turn', 'opponent-turn');
@@ -148,22 +161,46 @@
         var game = Chess();
         if (!game.load(fullFen(startFen))) game.reset();
 
+        var fenParts = fullFen(startFen).split(/\s+/);
+        var boardOrientation = fenParts[1] === 'b' ? 'black' : 'white';
+
+        function onDragStart(source, piece) {
+            if (solved || animatingSolution || waitingReply) return false;
+            if (!solution.length || game.history().length >= solution.length) return false;
+            if ((game.turn() === 'w' && piece.indexOf('w') !== 0) || (game.turn() === 'b' && piece.indexOf('b') !== 0)) return false;
+        }
+
+        function same(a, b) {
+            return (a || '').replace(/[+#]/g, '').toLowerCase() === (b || '').replace(/[+#]/g, '').toLowerCase();
+        }
+
+        function flashBoardError() {
+            boardWrap.classList.remove('board-error-flash');
+            void boardWrap.offsetWidth;
+            boardWrap.classList.add('board-error-flash');
+            setTimeout(function () { boardWrap.classList.remove('board-error-flash'); }, 600);
+        }
+
         var board = Chessboard('board', {
-            position: game.fen().split(' ')[0], draggable: false,
+            position: game.fen().split(' ')[0],
+            draggable: true,
+            orientation: boardOrientation,
+            dropOffBoard: 'snapback',
             pieceTheme: @json(asset('img/chesspieces/wikipedia').'/{piece}.png'),
             moveSpeed: 300,
+            snapbackSpeed: 200,
+            onDragStart: onDragStart,
+            onDrop: onDrop,
         });
 
         var feedbackEl = document.getElementById('feedback');
         var stepEl     = document.getElementById('step-label');
-        var input      = document.getElementById('move_input');
         var movesList  = document.getElementById('played-moves');
-        var btnGo      = document.getElementById('btn-submit');
 
         function show(ok, txt) {
             feedbackEl.classList.remove('hidden');
             if (ok) {
-                    feedbackEl.className = 'rounded-2xl px-5 py-3.5 text-sm font-medium border transition-all duration-300 bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-500/[0.07] dark:border-amber-500/20 dark:text-amber-400';
+                feedbackEl.className = 'rounded-2xl px-5 py-3.5 text-sm font-medium border transition-all duration-300 bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-500/[0.07] dark:border-amber-500/20 dark:text-amber-400';
             } else {
                 feedbackEl.className = 'rounded-2xl px-5 py-3.5 text-sm font-medium border transition-all duration-300 bg-red-50 border-red-200 text-red-800 dark:bg-red-500/[0.07] dark:border-red-500/20 dark:text-red-400';
             }
@@ -173,109 +210,174 @@
 
         function refresh() {
             var n = game.history().length;
-            stepEl.textContent = n >= solution.length ? 'Puzzle complete.' : 'Move ' + (n + 1) + ' of ' + solution.length;
+            if (!solution.length) {
+                stepEl.textContent = 'No moves in solution.';
+            } else {
+                stepEl.textContent = n >= solution.length ? 'Puzzle complete.' : 'Move ' + (n + 1) + ' of ' + solution.length;
+            }
             movesList.textContent = n === 0 ? '—' : game.history().join(', ');
-        }
-
-        function same(a, b) { return (a || '').replace(/[+#]/g, '').toLowerCase() === (b || '').replace(/[+#]/g, '').toLowerCase(); }
-
-        function normalize(s) {
-            s = (s || '').trim(); if (!s) return s;
-            var c = s.replace(/0/g, 'O').replace(/\s/g, '');
-            if (/^o-o-o$/i.test(c)) return 'O-O-O';
-            if (/^o-o$/i.test(c)) return 'O-O';
-            var ch = s[0];
-            if ('nrqk'.includes(ch)) return ch.toUpperCase() + s.slice(1);
-            if (ch === 'b' && !/^bx[a-h][1-8]/.test(s) && !/^b[1-8]/.test(s)) return 'B' + s.slice(1);
-            return s;
         }
 
         function markSolved() {
             document.getElementById('solved-banner').classList.remove('hidden');
             document.getElementById('solved-banner').style.boxShadow = '0 0 30px rgba(245,158,11,0.1)';
-            input.disabled = true; btnGo.disabled = true;
             setTurn(false);
-            if (!solved) { solved = true; fetch(completeUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }, body: '{}' }); }
+            if (!solved) {
+                solved = true;
+                fetch(completeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: '{}',
+                });
+            }
         }
 
-        function attempt() { fetch(attemptUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }, body: '{}' }); }
+        function attempt() {
+            fetch(attemptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: '{}',
+            });
+        }
 
-        function onSubmit() {
-            hide();
-            if (game.history().length >= solution.length) { show(true, 'Already finished.'); return; }
-            var typed = normalize(input.value);
-            if (!typed) { show(false, 'Type a move first.'); return; }
-
-            var want   = solution[game.history().length];
-            var played = game.move(typed, { sloppy: true });
-            if (!played) { show(false, 'Illegal move. Try again.'); return; }
-            if (!same(played.san, want)) { game.undo(); show(false, 'Wrong move. Try again.'); attempt(); return; }
-
-            board.position(game.fen().split(' ')[0], true);
-            input.value = ''; input.disabled = true; btnGo.disabled = true;
+        function scheduleOpponentReply() {
+            if (game.history().length >= solution.length) {
+                show(true, 'Puzzle Solved!');
+                markSolved();
+                return;
+            }
+            clearOpponentTimer();
+            waitingReply = true;
             setTurn(false);
-            refresh();
-
-            if (game.history().length >= solution.length) { show(true, '✓ Puzzle solved!'); markSolved(); return; }
-
             show(true, 'Good move — opponent is thinking...');
-            setTimeout(function () {
+            opponentTimer = setTimeout(function () {
+                opponentTimer = null;
                 var reply = game.move(solution[game.history().length], { sloppy: true });
-                if (!reply) { setTurn(true); input.disabled = false; btnGo.disabled = false; refresh(); return; }
+                if (!reply) {
+                    waitingReply = false;
+                    setTurn(true);
+                    show(false, 'Could not play the next line move.');
+                    refresh();
+                    board.position(game.fen().split(' ')[0], true);
+                    return;
+                }
                 board.position(game.fen().split(' ')[0], true);
                 refresh();
-                if (game.history().length >= solution.length) { show(true, '✓ Puzzle solved!'); markSolved(); }
-                else {
+                waitingReply = false;
+                if (game.history().length >= solution.length) {
+                    show(true, 'Puzzle Solved!');
+                    markSolved();
+                } else {
                     show(true, 'They play ' + reply.san + '. Your turn.');
-                    input.disabled = false; btnGo.disabled = false;
-                    setTurn(true); input.focus();
+                    setTurn(true);
                 }
-            }, 750);
+            }, 500);
         }
 
-        btnGo.onclick = onSubmit;
-        input.onkeydown = function (e) { if (e.key === 'Enter') onSubmit(); };
+        function onDrop(source, target) {
+            hide();
+            if (source === target) return 'snapback';
+            if (solved || animatingSolution || waitingReply) return 'snapback';
+            if (!solution.length || game.history().length >= solution.length) return 'snapback';
+
+            var want = solution[game.history().length];
+            var move = game.move({ from: source, to: target, promotion: 'q' });
+
+            if (!move) {
+                flashBoardError();
+                show(false, 'Illegal move. Try again.');
+                return 'snapback';
+            }
+            if (!same(move.san, want)) {
+                game.undo();
+                flashBoardError();
+                show(false, 'Try again.');
+                attempt();
+                return 'snapback';
+            }
+
+            board.position(game.fen().split(' ')[0], false);
+            refresh();
+
+            if (game.history().length >= solution.length) {
+                show(true, 'Puzzle Solved!');
+                markSolved();
+                return;
+            }
+
+            scheduleOpponentReply();
+        }
 
         document.getElementById('btn-step-back').onclick = function () {
             hide();
+            cancelOpponentWait();
             if (game.history().length === 0) return;
             if (game.history().length % 2 === 0) game.undo();
             if (game.history().length > 0) game.undo();
             board.position(game.fen().split(' ')[0], false);
-            if (!solved) { input.disabled = false; btnGo.disabled = false; setTurn(true); }
-            refresh(); input.focus();
+            if (!solved) setTurn(true);
+            refresh();
         };
 
         document.getElementById('btn-reset').onclick = function () {
+            cancelOpponentWait();
+            animatingSolution = false;
             game.load(fullFen(startFen));
             board.position(game.fen().split(' ')[0], false);
-            input.value = '';
-            if (!solved) { input.disabled = false; btnGo.disabled = false; setTurn(true); }
-            hide(); refresh(); input.focus();
+            if (!solved) setTurn(true);
+            hide();
+            refresh();
         };
 
         document.getElementById('btn-solution').onclick = function () {
+            cancelOpponentWait();
+            animatingSolution = true;
             game.load(fullFen(startFen));
             board.position(game.fen().split(' ')[0], false);
-            input.disabled = true; btnGo.disabled = true;
             setTurn(false);
-            input.value = '';
+            hide();
             show(true, 'Playing solution...');
             refresh();
             var i = 0;
             function playNext() {
-                if (i >= solution.length) { show(true, 'Solution complete!'); return; }
+                if (i >= solution.length) {
+                    animatingSolution = false;
+                    show(true, 'Solution complete!');
+                    return;
+                }
                 var move = game.move(solution[i], { sloppy: true });
-                if (!move) { show(false, 'Bad solution move: ' + solution[i]); return; }
+                if (!move) {
+                    animatingSolution = false;
+                    show(false, 'Bad solution move: ' + solution[i]);
+                    return;
+                }
                 board.position(game.fen().split(' ')[0], true);
-                refresh(); i++;
+                refresh();
+                i++;
                 setTimeout(playNext, 800);
             }
             setTimeout(playNext, 400);
         };
 
         refresh();
-        if (!solved) { setTurn(true); input.focus(); }
+        if (!solution.length) {
+            show(false, 'No solution moves are stored for this puzzle.');
+            setTurn(false);
+        } else if (!solved) {
+            setTurn(true);
+        } else {
+            setTurn(false);
+        }
     })();
     </script>
     @endpush
